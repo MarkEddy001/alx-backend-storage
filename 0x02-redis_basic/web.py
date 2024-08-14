@@ -40,10 +40,3 @@ def get_page(url: str) -> str:
     res = requests.get(url)
     res.raise_for_status()  # Raise an error for bad status codes
     return res.text
-
-
-# Test the function
-if __name__ == "__main__":
-    url = "http://slowwly.robertomurray.co.uk/delay/5000/url/http://www.example.com"
-    print(get_page(url))  # First call, should take time
-    print(get_page(url))  # Second call, should be fast due to caching
