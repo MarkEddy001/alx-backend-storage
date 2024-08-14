@@ -15,8 +15,8 @@ def count_url_access(method: Callable[[str], str]) -> Callable[[str], str]:
     @wraps(method)
     def wrapper(url: str) -> str:
         """Wrapper function for caching the output and tracking the count."""
-        cached_key = "cached:" + url
-        count_key = "count:" + url
+        cached_key = f"cached:{url}"
+        count_key = f"count:{url}"
 
         # Check if the URL is already cached
         cached_data = store.get(cached_key)
@@ -25,12 +25,15 @@ def count_url_access(method: Callable[[str], str]) -> Callable[[str], str]:
             return cached_data.decode("utf-8")
 
         # If not cached, fetch the URL and cache it
-        html = method(url)
-        store.incr(count_key)
-        store.set(cached_key, html)
-        store.expire(cached_key, 10)
-        print(f"Cache miss for {url}, caching now")
-        return html
+        try:
+            html = method(url)
+            store.incr(count_key)
+            store.set(cached_key, html, ex=10)  # Set with expiration time of 10 seconds
+            print(f"Cache miss for {url}, caching now")
+            return html
+        except requests.RequestException as e:
+            print(f"Error fetching URL: {e}")
+            return ""
     return wrapper
 
 
@@ -40,3 +43,10 @@ def get_page(url: str) -> str:
     res = requests.get(url)
     res.raise_for_status()  # Raise an error for bad status codes
     return res.text
+
+
+# Test the function
+if __name__ == "__main__":
+    url = "http://www.example.com"
+    print(get_page(url))  # First call, should take time
+    print(get_page(url))  # Second call, should be fast due to caching
