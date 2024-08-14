@@ -45,7 +45,7 @@ def get_page(url: str) -> str:
 
 # Test the function
 if __name__ == "__main__":
-    url = "http://www.example.com"
+    url = "http://www.google.com"
     print("First call:")
     print(get_page(url))  # First call, should take time
     print("Second call:")
