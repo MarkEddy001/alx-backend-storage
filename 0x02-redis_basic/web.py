@@ -15,7 +15,7 @@ store = redis.Redis()
 def count_url_access(method):
     """ Decorator counting how many times a URL is accessed """
     @wraps(method)
-    def wrapper(url, fallback=False):
+    def wrapper(url):
         cached_key = "cached:" + url
         cached_data = store.get(cached_key)
         if cached_data:
@@ -27,14 +27,10 @@ def count_url_access(method):
             html = method(url)
         except requests.exceptions.RequestException as e:
             logger.error("Error fetching %s: %s", url, e)
-            if fallback:
-                logger.info("Returning fallback content for %s", url)
-                return "<h1>Error fetching content</h1>"
-            else:
-                raise e
+            return "<h1>Error fetching content</h1>"
 
         store.incr(count_key)
-        store.set(cached_key, html)
+        store.set(cached_key, html.encode())
         store.expire(cached_key, 10)
         return html
     return wrapper
